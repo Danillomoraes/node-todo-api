@@ -11,27 +11,25 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
   }
     console.log('Connect to Mongo server');
 
-  // db.collection('Todos').find({
-  //   _id: new ObjectID('5b6c41781cf1a6228005fa9a')
-  // }).toArray().then((docs) =>{
-  //
-  //   console.log(docs);
-  //
-  // }, (err) => {
-  //   if (err) {
-  //     console.log('unable to find document', err);
-  //   }
-  // });
+  db.collection('Todos').find().toArray().then((docs) =>{
 
-  db.collection('Todos').find().count().then((count) =>{
-
-    console.log(`Todos count: ${count}`);
+    console.log(docs);
 
   }, (err) => {
     if (err) {
       console.log('unable to find document', err);
     }
   });
+
+  // db.collection('Todos').find().count().then((count) =>{
+  //
+  //   console.log(`Todos count: ${count}`);
+  //
+  // }, (err) => {
+  //   if (err) {
+  //     console.log('unable to find document', err);
+  //   }
+  // });
 
 
   db.close();
