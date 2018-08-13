@@ -10,7 +10,7 @@ var app = express();
 app.use((req, res, next) => {
   var now = new Date().toString();
   var log = `${now}: ${req.method}, ${req.url}`
-  console.log(log);
+  // console.log(log);
 
   next();
 });
