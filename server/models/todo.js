@@ -3,11 +3,10 @@ var mongoose = require('mongoose');
 var Todo = mongoose.model('Todo', {
   text: {
     type: String,
-    require: true
+    required: true
   },
   completed: {
-    type: Boolean,
-    require: true
+    type: Boolean
   },
   completedAt: {
     type: Number
