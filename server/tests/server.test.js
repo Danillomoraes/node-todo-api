@@ -8,9 +8,10 @@ const todos = [
     text: "test 1"
   },
   {
+    __id: '5b71bd046bcfe526c4aa603d',
     text: 'test 2'
   }
-]
+];
 
 
 beforeEach((done) => {
@@ -74,4 +75,18 @@ describe('GET /todos', () => {
       })
       .end(done);
   });
-});
+
+  it('should return invalid Id', (done) => {
+    request(app)
+      .get('/todos/5b71bd046bcfe524aa603d')
+      .expect(400)
+      .end((err, res) => {
+        if(err) {
+          return done(err);
+        }
+
+        done();
+      }).catch((e) => done(e));
+    });
+
+  });

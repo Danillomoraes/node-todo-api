@@ -1,7 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-var{mongoose} = require ('./db/mongoose');
+var{mongoose} = require('./db/mongoose');
+var{ObjectID} = require('mongodb');
 var{Todo} = require('./models/todo');
 var{Users} = require('./models/users');
 
@@ -31,6 +32,8 @@ app.post('/todos', (req, res)=> {
 
 });
 
+//GET's requests
+
 app.get('/todos', (req, res) => {
   Todo.find().then((todos) => {
     res.send({todos});
@@ -39,44 +42,27 @@ app.get('/todos', (req, res) => {
   });
 });
 
+app.get('/todos/:id', (req, res) => {
+  var id = req.params.id;
+
+  if(!ObjectID.isValid(id)) {
+    res.status(400).send({});
+  }
+
+  Todo.findById(id).then((todo) => {
+    if(!todo){
+      res.status(404).send({});
+    }
+
+    res.send({todo});
+  }, (e) => {
+    res.status(400).send({e});
+  });
+
+});
+
 module.exports={app}
 
 app.listen(3000, () => {
   console.log('Started server on port 3000');
 });
-
-
-//
-// // Mongoose way, didnt work on x86 mongo version
-//
-// mongoose.Promise = global.Promise;
-// mongoose.connect('mongodb://localhost:27017/TodoApp', {useNewUrlParser: true, bufferCommands: false}).then(() => {
-//   console.log('connected to mongo');
-// }, (err) => {
-//   console.log(err);
-// });
-//
-//
-//
-// var newTodo = new Todo({
-//   text: 'tirar roupa do varal'
-//   });
-//
-// newTodo.save().then((doc) => {
-//   console.log('saved todo', doc);
-//   mongoose.disconnect();
-// }, (e) => {
-//   return console.log(e);
-// });
-//
-//
-//
-// var user = new User({
-//
-// });
-//
-// user.save().then((doc)=> {
-//   console.log('User saved', doc);
-// }, (err) => {
-//   console.log('Unable to save user', err);
-// });
