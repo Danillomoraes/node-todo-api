@@ -104,8 +104,61 @@ describe('GET /todos', () => {
     })
 
   });
+  describe('PATCH /todos/:id', () => {
+    var body = {
+      completed : true,
+      text : 'update todo'
+    };
 
-describe('DELETE /todos', () => {
+    it('should return 404 invalid', (done)=> {
+      request(app)
+      .patch('/todos/32165')
+      .send(body)
+      .expect(404)
+      .end(done);
+    });
+    it('should return 404 not found', (done) => {
+      request(app)
+      .patch('/todos/6b71bd046bcfe526c4aa603d')
+      .expect(404)
+      .end(done);
+    });
+
+    it('should update the note', (done) => {
+      request(app)
+      .patch(`/todos/${id}`)
+      .send(body)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err)
+        }
+        it('should return timestamp and completed be true', () => {
+          expect(res.body.todo.completedAt).toBeA(Date);
+          expect(res.boby.todo.completed).toBe(true);
+        });
+        done();
+      });
+    });
+    it('should set completedAt null if omited completed', (done) => {
+      request(app)
+      .patch(`/todos/${id}`)
+      .send({text: 'something new test'})
+      .expect(200)
+      .end((err, res) => {
+        if(err) {
+          return done(err);
+        }
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toBe(null);
+        done();
+      });
+
+
+    });
+  });
+
+describe('DELETE /todos/:id', () => {
   it('should return 404 invalid', (done)=> {
     request(app)
       .delete('/todos/32165')
@@ -125,7 +178,18 @@ describe('DELETE /todos', () => {
       .expect((res) => {
         expect(res.body.todo._id).toBe(id);
       })
-      .end(done);
+      .end((err, res)=> {
+        if (err) {
+          return done(err)
+        }
+
+        Todo.findById(id).then((todo) => {
+          expect(todo).toBe(null);
+          done();
+        }).catch((e)=> {
+          return done(e)
+        });
+      });
   });
 
 });
