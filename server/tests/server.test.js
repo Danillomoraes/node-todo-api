@@ -4,12 +4,13 @@ const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const id = '5b71bd046bcfe526c4aa603d';
 const todos = [
   {
     text: "test 1"
   },
   {
-    _id: new ObjectId('5b71bd046bcfe526c4aa603d'),
+    _id: new ObjectId(id),
     text: 'test 2'
   }
 ];
@@ -82,7 +83,7 @@ describe('GET /todos', () => {
       .get('/todos/5b71bd046bcfe526c4aa603d')
       .expect(200)
       .expect((res) => {
-        expect(res.body.todo._id).toBe('5b71bd046bcfe526c4aa603d');
+        expect(res.body.todo._id).toBe(id);
       })
       .end(done);
   })
@@ -103,3 +104,28 @@ describe('GET /todos', () => {
     })
 
   });
+
+describe('DELETE /todos', () => {
+  it('should return 404 invalid', (done)=> {
+    request(app)
+      .delete('/todos/32165')
+      .expect(404)
+      .end(done);
+  });
+  it('should return 404 not found', (done) => {
+    request(app)
+      .delete('/todos/6b71bd046bcfe526c4aa603d')
+      .expect(404)
+      .end(done);
+  })
+  it('should delete note', (done) => {
+    request(app)
+      .delete(`/todos/${id}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo._id).toBe(id);
+      })
+      .end(done);
+  });
+
+});
