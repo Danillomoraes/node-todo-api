@@ -6,6 +6,8 @@ var{ObjectID} = require('mongodb');
 var{Todo} = require('./models/todo');
 var{Users} = require('./models/users');
 
+const port = process.env.PORT || 3000;
+
 var app = express();
 
 app.use((req, res, next) => {
@@ -63,6 +65,6 @@ app.get('/todos/:id', (req, res) => {
 
 module.exports={app}
 
-app.listen(3000, () => {
-  console.log('Started server on port 3000');
+app.listen(port, () => {
+  console.log(`Started server on port ${port}`);
 });
