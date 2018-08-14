@@ -1,5 +1,6 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
@@ -8,7 +9,7 @@ const todos = [
     text: "test 1"
   },
   {
-    __id: '5b71bd046bcfe526c4aa603d',
+    _id: new ObjectId('5b71bd046bcfe526c4aa603d'),
     text: 'test 2'
   }
 ];
@@ -76,17 +77,29 @@ describe('GET /todos', () => {
       .end(done);
   });
 
-  it('should return invalid Id', (done) => {
+  it('should return one todo', (done) => {
     request(app)
-      .get('/todos/5b71bd046bcfe524aa603d')
-      .expect(400)
-      .end((err, res) => {
-        if(err) {
-          return done(err);
-        }
+      .get('/todos/5b71bd046bcfe526c4aa603d')
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo._id).toBe('5b71bd046bcfe526c4aa603d');
+      })
+      .end(done);
+  })
 
-        done();
-      }).catch((e) => done(e));
+  it('should return 404 if not found', (done) => {
+
+    request(app)
+      .get('/todos/6b71bd046bcfe526c4aa603d')
+      .expect(404)
+      .end(done);
     });
+
+    it('should return 400 if sent invalid id', (done)=> {
+      request(app)
+        .get('/todos/1234')
+        .expect(400)
+        .end(done);
+    })
 
   });
