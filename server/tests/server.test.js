@@ -3,30 +3,18 @@ const request = require('supertest');
 const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server');
+const {User} = require('./../models/user');
 const {Todo} = require('./../models/todo');
-const id = '5b71bd046bcfe526c4aa603d';
-const todos = [
-  {
-    text: "test 1"
-  },
-  {
-    _id: new ObjectId(id),
-    text: 'test 2'
-  }
-];
+const {todos, users, populateUsers, populateTodos} = require('./seed.js');
 
+beforeEach(populateTodos);
 
-beforeEach((done) => {
-  Todo.deleteMany({}).then(()=> {
-      Todo.insertMany(todos).then(()=>{done()})
-  });
-});
+describe('/todos', () => {
+  describe('POST /todos', () => {
+    it('should create a new todo', (done) => {
+      var text = "teste todo";
 
-describe('POST /todos', () => {
-  it('should create a new todo', (done) => {
-    var text = "teste todo";
-
-    request(app)
+      request(app)
       .post('/todos')
       .send({text})
       .expect(200)
@@ -44,10 +32,10 @@ describe('POST /todos', () => {
           done();
         }).catch((e) => done(e));
       });
-  });
+    });
 
-  it('should not create new todo', (done) => {
-    request(app)
+    it('should not create new todo', (done) => {
+      request(app)
       .post('/todos')
       .send({})
       .expect(400)
@@ -61,36 +49,36 @@ describe('POST /todos', () => {
           done();
         }).catch((e) => done(e));
       });
+    });
+
   });
 
-});
+  describe('GET /todos', () => {
 
-describe('GET /todos', () => {
+    it('should return all todos', (done) => {
 
-  it('should return all todos', (done) => {
-
-    request(app)
+      request(app)
       .get('/todos')
       .expect(200)
       .expect((res) => {
         expect(res.body.todos.length).toBe(2)
       })
       .end(done);
-  });
+    });
 
-  it('should return one todo', (done) => {
-    request(app)
-      .get('/todos/5b71bd046bcfe526c4aa603d')
+    it('should return one todo', (done) => {
+      request(app)
+      .get(`/todos/${todos[1]._id}`)
       .expect(200)
       .expect((res) => {
-        expect(res.body.todo._id).toBe(id);
+        expect(ObjectId(res.body.todo._id)).toEqual(todos[1]._id);
       })
       .end(done);
-  })
+    })
 
-  it('should return 404 if not found', (done) => {
+    it('should return 404 if not found', (done) => {
 
-    request(app)
+      request(app)
       .get('/todos/6b71bd046bcfe526c4aa603d')
       .expect(404)
       .end(done);
@@ -98,9 +86,9 @@ describe('GET /todos', () => {
 
     it('should return 400 if sent invalid id', (done)=> {
       request(app)
-        .get('/todos/1234')
-        .expect(400)
-        .end(done);
+      .get('/todos/1234')
+      .expect(400)
+      .end(done);
     })
 
   });
@@ -126,7 +114,7 @@ describe('GET /todos', () => {
 
     it('should update the note', (done) => {
       request(app)
-      .patch(`/todos/${id}`)
+      .patch(`/todos/${todos[1]._id}`)
       .send(body)
       .expect(200)
       .end((err, res) => {
@@ -142,7 +130,7 @@ describe('GET /todos', () => {
     });
     it('should set completedAt null if omited completed', (done) => {
       request(app)
-      .patch(`/todos/${id}`)
+      .patch(`/todos/${todos[1]._id}`)
       .send({text: 'something new test'})
       .expect(200)
       .end((err, res) => {
@@ -158,38 +146,100 @@ describe('GET /todos', () => {
     });
   });
 
-describe('DELETE /todos/:id', () => {
-  it('should return 404 invalid', (done)=> {
-    request(app)
+  describe('DELETE /todos/:id', () => {
+    it('should return 404 invalid', (done)=> {
+      request(app)
       .delete('/todos/32165')
       .expect(404)
       .end(done);
-  });
-  it('should return 404 not found', (done) => {
-    request(app)
+    });
+    it('should return 404 not found', (done) => {
+      request(app)
       .delete('/todos/6b71bd046bcfe526c4aa603d')
       .expect(404)
       .end(done);
-  })
-  it('should delete note', (done) => {
-    request(app)
-      .delete(`/todos/${id}`)
+    })
+    it('should delete note', (done) => {
+      request(app)
+      .delete(`/todos/${todos[1]._id}`)
       .expect(200)
       .expect((res) => {
-        expect(res.body.todo._id).toBe(id);
+        expect(ObjectId(res.body.todo._id)).toEqual(todos[1]._id);
       })
       .end((err, res)=> {
         if (err) {
           return done(err)
         }
 
-        Todo.findById(id).then((todo) => {
+        Todo.findById(todos[1]._id).then((todo) => {
           expect(todo).toBe(null);
           done();
         }).catch((e)=> {
           return done(e)
         });
       });
+    });
+
+  });
+});
+
+describe ('/users', () => {
+  describe('POST /users', () => {
+    // Post /users
+    //             -> reject user with invalid data
+    it('reject insert user with invalid email', (done) => {
+      request(app)
+      .post('/users')
+      .send(users[1])
+      .expect(400)
+      .end(done);
+    });
+    it('reject insert user with invalid password', (done) => {
+      request(app)
+      .post('/users')
+      .send(users[2])
+      .expect(400)
+      .end(done);
+    });
+    //             -> save user
+    it('should save user', (done) => {
+      request(app)
+      .post('/users')
+      .send(users[0])
+      .expect(200)
+      .end((res) => {
+        //             -> verify auth token
+        it('verify if the auth token is valid', (done, res) => {
+          token = res.header('x-auth');
+          User.findByToken(token).then((user) => {
+            expect(user)
+            .toNotBe(undefined)
+            .end(done)
+          }).catch((e) => {
+            done(e);
+          });
+        });
+        done()
+      });
+    });
+    //             -> reject email already saved
+    it('should reject user with email already saved', (done) => {
+      request(app)
+        .post('/users')
+        .send(users[0])
+        .expect(400)
+        .end(done);
+    });
   });
 
+  describe('GET /users/me', (done) => {
+    // GET /users/me
+    //             -> reject without header auth
+    it('should reject request without header', (done)=> {
+      request(app)
+      .get('/users/me')
+      .expect(401)
+      .end(done)
+    });
+  });
 });
