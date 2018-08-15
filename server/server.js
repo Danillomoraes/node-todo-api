@@ -7,7 +7,7 @@ const _ = require('lodash');
 var{mongoose} = require('./db/mongoose');
 var{ObjectID} = require('mongodb');
 var{Todo} = require('./models/todo');
-var{Users} = require('./models/users');
+var{User} = require('./models/user');
 
 var app = express();
 
@@ -110,6 +110,23 @@ app.patch('/todos/:id', (req, res) => {
   }).catch((e)=>{
     res.status(400).send();
   });
+});
+
+//POST /users
+
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  var user = new User(body);
+
+  user.save().then(() => {
+    return user.generateAuthToken();
+    // res.send(doc);
+  }).then((token) => {
+    res.header('x-auth', token).send(user);
+  }).catch((e) => {
+    res.status(400).send(e);
+  });
+
 });
 
 module.exports={app}
