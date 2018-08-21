@@ -10,11 +10,7 @@ var UserSchema = new mongoose.Schema({
     required: true,
     trim: true,
     minlength:1,
-    unique: true,
-    validate: {
-      validator: value => isEmail(value), msg: 'Invalid email.',
-      message: `{value} is not a valid email`
-    }
+    unique: true
   },
   password: {
     type: String,
@@ -32,6 +28,16 @@ var UserSchema = new mongoose.Schema({
     }
   }]
 });
+
+var validateEmail = (v) => {
+    if (v.includes('@') && v.includes('.')) {
+      return true
+    } else {
+      return false
+    }
+}
+
+UserSchema.path('email').validate(validateEmail);
 
 UserSchema.methods.toJSON = function () {
   var user = this;

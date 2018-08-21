@@ -1,7 +1,12 @@
 const {ObjectId} = require('mongodb');
+const jwt = require('jsonwebtoken');
+
 const {Todo} = require('./../models/todo');
-const {User} = require('./../models/user')
+const {User} = require('./../models/user');
+
+
 const id = '5b71bd046bcfe526c4aa603d';
+const userOneId = new ObjectId();
 
 const todos = [
   {
@@ -21,24 +26,41 @@ const populateTodos = (done) => {
 
 const users = [
   {
+    _id: userOneId,
     email: "danillom@example.com",
-    password: "danillom"
+    password: "danillom",
+    tokens: [{
+      access: 'auth',
+      token: jwt.sign({_id: userOneId, access: 'auth'}, 'abc123').toString()
+    }]
   },
   {
-    email: "danillom",
+    email: "danillomasd@example.com",
     password: "danillom"
   },
   {
     email: "danillo.m@example.com",
-    password: "asd"
+    password: "asdasda"
+  },
+  {
+    email: 'dnaillom@example.com',
+    password: 'asd'
   }
 ];
 
 const populateUsers = (done) => {
   User.deleteMany({}).then(()=> {
-    // User.insertOne(users[0]).then(()=>{done()})
+    // console.log(users[0]);
+    var userOne = new User(users[0]).save();
+    var userTwo = new User(users[1]).save();
+
+    return Promise.all([userOne, userTwo])
+  }).then(()=> {
+    done()
+  }).catch((e) =>{
+    done(e);
   });
 };
 
 
-module.exports = {users, todos, populateTodos}
+module.exports = {users, todos, populateTodos, populateUsers}

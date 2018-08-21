@@ -7,6 +7,7 @@ const {User} = require('./../models/user');
 const {Todo} = require('./../models/todo');
 const {todos, users, populateUsers, populateTodos} = require('./seed.js');
 
+beforeEach(populateUsers);
 beforeEach(populateTodos);
 
 describe('/todos', () => {
@@ -26,7 +27,7 @@ describe('/todos', () => {
           return done(err);
         }
 
-        Todo.find({text}).then ((todos)=> {
+        Todo.find({text}).then((todos)=> {
           expect(todos.length).toBe(1);
           expect(todos[0].text).toBe(text);
           done();
@@ -184,45 +185,48 @@ describe('/todos', () => {
 });
 
 describe ('/users', () => {
+  describe('GET /users/me', (done) => {
+    // GET /users/me
+    it('should return user if authenticated', (done) => {
+      request(app)
+      .get('/users/me')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
+      }).end(done);
+
+    });
+    //             -> reject without header auth
+    it('should return 401 if not authenticated', (done)=> {
+      request(app)
+      .get('/users/me')
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done)
+    });
+  });
+
   describe('POST /users', () => {
     // Post /users
     //             -> reject user with invalid data
-    it('reject insert user with invalid email', (done) => {
+    it('should create a user', (done) => {
       request(app)
       .post('/users')
-      .send(users[1])
-      .expect(400)
+      .send(users[2])
+      .expect(200)
       .end(done);
     });
     it('reject insert user with invalid password', (done) => {
       request(app)
       .post('/users')
-      .send(users[2])
+      .send(users[3])
       .expect(400)
       .end(done);
     });
-    //             -> save user
-    it('should save user', (done) => {
-      request(app)
-      .post('/users')
-      .send(users[0])
-      .expect(200)
-      .end((res) => {
-        //             -> verify auth token
-        it('verify if the auth token is valid', (done, res) => {
-          token = res.header('x-auth');
-          User.findByToken(token).then((user) => {
-            expect(user)
-            .toNotBe(undefined)
-            .end(done)
-          }).catch((e) => {
-            done(e);
-          });
-        });
-        done()
-      });
-    });
-    //             -> reject email already saved
     it('should reject user with email already saved', (done) => {
       request(app)
         .post('/users')
@@ -232,14 +236,4 @@ describe ('/users', () => {
     });
   });
 
-  describe('GET /users/me', (done) => {
-    // GET /users/me
-    //             -> reject without header auth
-    it('should reject request without header', (done)=> {
-      request(app)
-      .get('/users/me')
-      .expect(401)
-      .end(done)
-    });
-  });
 });
