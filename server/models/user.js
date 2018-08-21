@@ -58,6 +58,18 @@ UserSchema.methods.generateAuthToken = function () {
   });
 };
 
+UserSchema.methods.generateLoginToken = function () {
+  var user = this;
+  var access = 'login';
+  var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
+
+  user.tokens = user.tokens.concat([{access, token}]);
+
+  return user.save().then(()=> {
+    return token;
+  });
+}
+
 UserSchema.statics.findByToken = function (token) {
   var User = this;
   var decoded;

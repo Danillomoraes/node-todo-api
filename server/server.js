@@ -3,6 +3,7 @@ require('./config/config.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 var{mongoose} = require('./db/mongoose');
 var{ObjectID} = require('mongodb');
@@ -128,6 +129,33 @@ app.post('/users', (req, res) => {
     res.status(400).send(e);
   });
 
+});
+
+//POST users/login
+
+app.post('/users/login', (req, res) => {
+  var body= _.pick(req.body, ['email', 'password']);
+  var hashPass
+
+  User.findOne({email: body.email}).then((user) => {
+    if (!user) {
+      return res.status(401).send({});
+    }
+    //
+    // bcrypt.genSalt(10, (err, salt) => {
+    //   bcrypt.hash(body.password, salt, (err, hash) => {
+    //     hashPass = hash;
+    //   });
+    // });
+    console.log(user);
+    bcrypt.compare(body.password, user.password, (err, res)=> {
+      if(res) {
+          res.send({user});
+      } else {
+        res.status(401).send({});
+      }
+    });
+  });
 });
 
 app.get('/users/me', authenticate, (req, res) => {
