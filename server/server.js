@@ -135,27 +135,15 @@ app.post('/users', (req, res) => {
 
 app.post('/users/login', (req, res) => {
   var body= _.pick(req.body, ['email', 'password']);
-  var hashPass
-
-  User.findOne({email: body.email}).then((user) => {
-    if (!user) {
-      return res.status(401).send({});
-    }
-    //
-    // bcrypt.genSalt(10, (err, salt) => {
-    //   bcrypt.hash(body.password, salt, (err, hash) => {
-    //     hashPass = hash;
-    //   });
-    // });
-    console.log(user);
-    bcrypt.compare(body.password, user.password, (err, res)=> {
-      if(res) {
-          res.send({user});
-      } else {
-        res.status(401).send({});
-      }
-    });
+  User.findByCredentials(body.email, body.password).then((user) => {
+    // res.send(user);
+    return user.generateAuthToken().then((token)=> {
+      res.header('x-auth', token).send(user);
+    })
+  }).catch((e)=>{
+    res.status(400).send();
   });
+
 });
 
 app.get('/users/me', authenticate, (req, res) => {

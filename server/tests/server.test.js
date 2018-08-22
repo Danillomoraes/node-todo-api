@@ -235,5 +235,35 @@ describe ('/users', () => {
         .end(done);
     });
   });
+  describe('POST /users/login', () => {
+
+    it('should not login the user', (done) => {
+      request(app)
+      .post('/users/login')
+      .send({
+        email: "daasdnillom@example.com",
+        password: "daasdnillom"
+      })
+      .expect(400)
+      .expect((res)=> {
+        expect(res.header['x-auth']).toBe(undefined);
+      })
+      .end(done)
+    });
+    it('should login the user', (done)=> {
+      request(app)
+      .post('/users/login')
+      .send({
+        email: users[0].email,
+        password: users[0].password
+      })
+      .expect(200)
+      .expect((res)=> {
+        expect(res.body.email).toBe(users[0].email);
+        // console.log(res.header);
+        expect(res.header[1]).toBe(users[0].tokens.token);
+      }).end(done);
+    });
+  });
 
 });
