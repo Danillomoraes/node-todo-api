@@ -265,5 +265,32 @@ describe ('/users', () => {
       }).end(done);
     });
   });
+  describe('DELETE /users/me/token', () => {
+    it('should reject request without auth hearder', (done) => {
+      request(app)
+        .delete('/users/me/token')
+        .expect(401)
+        .end(done);
+    });
+    it('should return 400 with wrong header', (done)=> {
+      request(app)
+        .delete('/users/me/token')
+        .set('x-auth','asodnasojdasojd')
+        .expect(401)
+        .end(done);
+    });
+    it('should remove auth token', (done) => {
+      request(app)
+        .delete('/users/me/token')
+        .set('x-auth', users[0].tokens[0].token)
+        .expect(200)
+        .expect((res)=> {
+          User.findByToken(users[0].tokens[0].token).then((user) => {
+            expect(user).toBe(null);
+          });
+        })
+        .end(done);
+    });
+  });
 
 });
