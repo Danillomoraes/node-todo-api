@@ -52,7 +52,7 @@ describe('/todos', () => {
         }
 
         Todo.find({_creator: users[0]._id}).then((todos) => {
-          expect(todos.length).toBe(2);
+          expect(todos.length).toBe(1);
           done();
         }).catch((e) => done(e));
       });
@@ -76,7 +76,7 @@ describe('/todos', () => {
       .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .expect((res) => {
-        expect(res.body.todos.length).toBe(2)
+        expect(res.body.todos.length).toBe(1)
       })
       .end(done);
     });
@@ -147,6 +147,19 @@ describe('/todos', () => {
           expect(res.body.todo.completedAt).toBeA(Date);
           expect(res.boby.todo.completed).toBe(true);
         });
+        done();
+      });
+    });
+    it('should return 404 to update the note as other user', (done) => {
+      request(app)
+      .patch(`/todos/${todos[1]._id}`)
+      .set('x-auth', users[0].tokens[0].token)
+      .send(body)
+      .expect(404)
+      .end((err, res) => {
+        if (err) {
+          return done(err)
+        }
         done();
       });
     });
